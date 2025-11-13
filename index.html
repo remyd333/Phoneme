@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sauter les Sons - Phonèmes</title>
+<style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+        font-family: 'Comic Sans MS', cursive, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        overflow: hidden; user-select: none;
+    }
+    #gameContainer {
+        width: 100vw; height: 100vh; position: relative;
+        max-width: 1200px; margin: 0 auto;
+    }
+    #menuScreen, #levelScreen, #gameScreen, #endScreen {
+        position: absolute; width: 100%; height: 100%;
+        display: flex; flex-direction: column; align-items: center;
+        justify-content: center; color: white; text-align: center;
+        padding: 20px;
+    }
+    h1 { font-size: 4em; margin-bottom: 30px; text-shadow: 3px 3px 6px rgba(0,0,0,0.5); }
+    h2 { font-size: 3em; margin-bottom: 20px; text-shadow: 2px 2px 4px rgba(0,0,0,0.5); }
+    button {
+        font-size: 2em; padding: 20px 50px; margin: 15px;
+        background: #FFD93D; color: #333; border: none;
+        border-radius: 50px; cursor: pointer; transition: transform 0.2s;
+        font-weight: bold;
+    }
+    button:hover { transform: scale(1.1); box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+    .level-grid {
+        display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 30px; max-width: 900px; padding: 20px;
+    }
+    .level-btn {
+        background: #4CAF50; color: white; padding: 40px; font-size: 2.5em;
+    }
+    #gameArea {
+        width: 100%; height: 70%; position: relative; overflow: hidden;
+    }
+    #ground {
+        position: absolute; bottom: 0; width: 100%; height: 120px;
+        background: #8B4513;
+    }
+    #character {
+        position: absolute; width: 80px; height: 100px; bottom: 120px; left: 80px;
+        background: #FF6B6B; border-radius: 15px; transition: bottom 0.3s;
+    }
+    #character::before {
+        content: "😊"; font-size: 70px; position: absolute; top: -5px; left: 5px;
+    }
+    .obstacle {
+        position: absolute; width: 200px; height: 220px; bottom: 120px;
+        right: -200px; background: #555; border-radius: 20px;
+        display: flex; flex-direction: column; align-items: center; justify-content: center;
+    }
+    .obstacle-image {
+        width: 120px; height: 120px; background: white; border-radius: 15px;
+        display: flex; align-items: center; justify-content: center; font-size: 5em;
+    }
+    .masked-word {
+        margin-top: 10px; font-size: 2.5em; font-weight: bold; color: white;
+        font-family: 'Courier New', monospace;
+    }
+    #ui {
+        position: absolute; top: 20px; left: 20px; right: 200px;
+        display: flex; justify-content: space-between; color: white;
+        font-size: 2em; font-weight: bold;
+    }
+    #phonemeDisplay {
+        position: absolute; top: 30px; left: 50%; transform: translateX(-50%);
+        font-size: 6em; color: #FFD93D; text-shadow: 4px 4px 8px rgba(0,0,0,0.7);
+    }
+    #instruction {
+        position: absolute; top: 150px; left: 50%; transform: translateX(-50%);
+        font-size: 2.2em; color: white; background: rgba(0,0,0,0.5);
+        padding: 15px 40px; border-radius: 50px;
+    }
+    #controlArea {
+        position: absolute; bottom: 0; width: 100%; height: 30%;
+        background: rgba(0,0,0,0.2); display: flex; flex-direction: column;
+        align-items: center; justify-content: space-around;
+    }
+    #answerButtons { display: flex; gap: 30px; }
+    .answer-btn { padding: 25px 50px; font-size: 2.5em; }
+    .answer-btn.correct { background: #4CAF50; }
+    .answer-btn.wrong { background: #F44336; }
+    #pauseBtn {
+        position: absolute; top: 20px; right: 20px; padding: 15px 30px;
+        font-size: 1.5em; z-index: 100;
+    }
+    #feedback {
+        position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+        font-size: 5em; color: #FFD93D; font-weight: bold; text-shadow: 4px 4px 8px rgba(0,0,0,0.7);
+        animation: bounce 0.5s; z-index: 20;
+    }
+    @keyframes bounce {
+        0%, 100% { transform: translate(-50%, -50%) scale(1); }
+        50% { transform: translate(-50%, -50%) scale(1.3); }
+    }
+    .stars { font-size: 3em; margin: 20px; }
+    .hidden { display: none !important; }
+</style>
+</head>
+<body>
+<div id="gameContainer">
+    <!-- Écran Menu -->
+    <div id="menuScreen">
+        <h1>🏃‍♂️ Sauter les Sons 🎮</h1>
+        <p style="font-size: 1.8em; margin-bottom: 40px;">Écoute bien et aide l'explorateur !</p>
+        <button onclick="showLevels()">Jouer</button>
+    </div>
+
+    <!-- Écran Sélection Niveau -->
+    <div id="levelScreen" class="hidden">
+        <h2>Choisis un mode :</h2>
+        <button onclick="startGame(null, 'fixed')">📚 Niveau 1 (un son)</button>
+        <button onclick="startGame(null, 'random')" style="background:#FF9800;">🎯 Niveau 2 (sons aléatoires)</button>
+        <button onclick="showMenu()" style="background:#999;">← Retour</button>
+    </div>
+
+    <!-- Écran Jeu -->
+    <div id="gameScreen" class="hidden">
+        <div id="gameArea">
+            <div id="ground"></div>
+            <div id="character"></div>
+            <div id="phonemeDisplay"></div>
+            <div id="instruction">Quel son contient le mot ?</div>
+        </div>
+        <div id="controlArea">
+            <div id="answerButtons"></div>
+        </div>
+        
+        <div id="ui">
+            <div>Vies: <span id="lives">3</span> ❤️</div>
+            <div>Score: <span id="score">0</span> ⭐</div>
+            <div>Niveau: <span id="level">1</span>/5</div>
+        </div>
+        <button id="pauseBtn" onclick="pauseGame()">⏸️ Pause</button>
+    </div>
+
+    <!-- Écran Fin -->
+    <div id="endScreen" class="hidden">
+        <h2 id="endTitle">Bravo !</h2>
+        <div class="stars" id="endStars"></div>
+        <p id="endMessage" style="font-size: 2em; margin: 30px;"></p>
+        <button onclick="showLevels()">Choisir un autre mode</button>
+        <button onclick="showMenu()">Menu principal</button>
+    </div>
+</div>
+
+<script>
+// --- DONNÉES DES NIVEAUX CORRIGÉES ---
+// REMPLACER LES URLS PAR VOS FICHIERS AUDIO RÉELS
+const phonemesData = {
+    'ON': {
+        icon: '🔔', color: '#FF6B6B',
+        words: [
+            { img: '🚚', word: 'camion', audioUrl: 'https://example.com/audio/camion.mp3' },
+            { img: '✏️', word: 'crayon', audioUrl: 'https://example.com/audio/crayon.mp3' },
+            { img: '🌊', word: 'océan', audioUrl: 'https://example.com/audio/ocean.mp3' },
+            { img: '🦁', word: 'lion', audioUrl: 'https://example.com/audio/lion.mp3' },
+            { img: '🏠', word: 'maison', audioUrl: 'https://example.com/audio/maison.mp3' },
+            { img: '🐶', word: 'chien', audioUrl: 'https://example.com/audio/chien.mp3' },
+            { img: '🐱', word: 'chat', audioUrl: 'https://example.com/audio/chat.mp3' },
+            { img: '⏰', word: 'horloge', audioUrl: 'https://example.com/audio/horloge.mp3' }
+        ]
+    },
+    'AN': {
+        icon: '🎪', color: '#4ECDC4',
+        words: [
+            { img: '🏖️', word: 'sable', audioUrl: 'https://example.com/audio/sable.mp3' },
+            { img: '🐘', word: 'éléphant', audioUrl: 'https://example.com/audio/elephant.mp3' },
+            { img: '🐞', word: 'coccinelle', audioUrl: 'https://example.com/audio/coccinelle.mp3' },
+            { img: '📦', word: 'carton', audioUrl: 'https://example.com/audio/carton.mp3' },
+            { img: '🎵', word: 'chanson', audioUrl: 'https://example.com/audio/chanson.mp3' },
+            { img: '🚂', word: 'train', audioUrl: 'https://example.com/audio/train.mp3' },
+            { img: '🍎', word: 'pomme', audioUrl: 'https://example.com/audio/pomme.mp3' },
+            { img: '☀️', word: 'soleil', audioUrl: 'https://example.com/audio/soleil.mp3' }
+        ]
+    },
+    'OI': {
+        icon: '🎯', color: '#95E1D3',
+        words: [
+            { img: '🐸', word: 'grenouille', audioUrl: 'https://example.com/audio/grenouille.mp3' },
+            { img: '👑', word: 'roi', audioUrl: 'https://example.com/audio/roi.mp3' },
+            { img: '🌟', word: 'étoile', audioUrl: 'https://example.com/audio/etoile.mp3' },
+            { img: '🚗', word: 'voiture', audioUrl: 'https://example.com/audio/voiture.mp3' }, // ✓ CORRIGÉ
+            { img: '🦃', word: 'dinde', audioUrl: 'https://example.com/audio/dinde.mp3' },
+            { img: '🍌', word: 'banane', audioUrl: 'https://example.com/audio/banane.mp3' },
+            { img: '🎁', word: 'cadeau', audioUrl: 'https://example.com/audio/cadeau.mp3' },
+            { img: '🍓', word: 'fraise', audioUrl: 'https://example.com/audio/fraise.mp3' }
+        ]
+    },
+    'CH': {
+        icon: '🌸', color: '#F38181',
+        words: [
+            { img: '🍄', word: 'champignon', audioUrl: 'https://example.com/audio/champignon.mp3' },
+            { img: '🪑', word: 'chaise', audioUrl: 'https://example.com/audio/chaise.mp3' },
+            { img: '🐴', word: 'cheval', audioUrl: 'https://example.com/audio/cheval.mp3' },
+            { img: '🏠', word: 'maison', audioUrl: 'https://example.com/audio/maison.mp3' },
+            { img: '🐄', word: 'vache', audioUrl: 'https://example.com/audio/vache.mp3' },
+            { img: '🌻', word: 'tournesol', audioUrl: 'https://example.com/audio/tournesol.mp3' },
+            { img: '⏰', word: 'horloge', audioUrl: 'https://example.com/audio/horloge.mp3' },
+            { img: '🚪', word: 'porte', audioUrl: 'https://example.com/audio/porte.mp3' }
+        ]
+    }
+};
+
+// --- TOUTES LES COMBINAISONS MOT-PHONÈME POUR VÉRIFICATION ---
+const allPhonemesCheck = (word) => {
+    const checks = [];
+    if (word.includes('on')) checks.push('ON');
+    if (word.includes('an')) checks.push('AN');
+    if (word.includes('oi')) checks.push('OI');
+    if (word.includes('ch')) checks.push('CH');
+    return checks;
+};
+
+// --- ÉTAT DU JEU ---
+let currentPhoneme = '';
+let currentWord = null;
+let mode = 'fixed'; // 'fixed' ou 'random'
+let currentLevel = 0;
+let score = 0;
+let lives = 3;
+let gameRunning = false;
+let allWordsPool = [];
+let isPaused = false;
+let currentObstacle = null;
+let isAnswering = false;
+let gameTimeout = null;
+let audioElement = null;
+
+// --- AUDIO CONTEXT POUR LES EFFETS SONORES ---
+let audioContext = null;
+let masterGain = null;
+
+function initAudio() {
+    if (!audioContext) {
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        masterGain = audioContext.createGain();
+        masterGain.connect(audioContext.destination);
+        masterGain.gain.value = 0.3;
+    }
+}
+
+function playSound(frequency, duration, type = 'sine') {
+    if (!audioContext) initAudio();
+    
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    
+    oscillator.connect(gainNode);
+    gainNode.connect(masterGain);
+    
+    oscillator.frequency.value = frequency;
+    oscillator.type = type;
+    
+    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
+    
+    oscillator.start(audioContext.currentTime);
+    oscillator.stop(audioContext.currentTime + duration);
+}
+
+function playSuccess() {
+    playSound(523.25, 0.1);
+    setTimeout(() => playSound(659.25, 0.1), 100);
+    setTimeout(() => playSound(783.99, 0.2), 200);
+}
+
+function playFail() {
+    playSound(300, 0.1, 'sawtooth');
+    setTimeout(() => playSound(200, 0.2, 'sawtooth'), 100);
+}
+
+// --- GESTION DES ÉCRANS ---
+function showMenu() {
+    hideAllScreens();
+    document.getElementById('menuScreen').classList.remove('hidden');
+}
+
+function showLevels() {
+    hideAllScreens();
+    document.getElementById('levelScreen').classList.remove('hidden');
+}
+
+function hideAllScreens() {
+    document.querySelectorAll('#menuScreen, #levelScreen, #gameScreen, #endScreen')
+        .forEach(screen => screen.classList.add('hidden'));
+}
+
+// --- LOGIQUE DE JEU ---
+function startGame(phoneme, gameMode) {
+    currentPhoneme = phoneme;
+    mode = gameMode;
+    currentLevel = 1;
+    score = 0;
+    lives = 3;
+    gameRunning = true;
+    isPaused = false;
+    isAnswering = false;
+    
+    // Construire la liste de tous les mots si mode random
+    if (mode === 'random') {
+        allWordsPool = [];
+        for (const [phoneme, data] of Object.entries(phonemesData)) {
+            data.words.forEach(word => {
+                allWordsPool.push({...word, phoneme});
+            });
+        }
+        // Mélanger
+        allWordsPool.sort(() => Math.random() - 0.5);
+    } else {
+        allWordsPool = [...phonemesData[currentPhoneme].words];
+    }
+    
+    hideAllScreens();
+    document.getElementById('gameScreen').classList.remove('hidden');
+    
+    if (mode === 'fixed') {
+        document.getElementById('phonemeDisplay').textContent = `Trouve : ${currentPhoneme}`;
+        document.getElementById('phonemeDisplay').style.color = phonemesData[currentPhoneme].color;
+    } else {
+        document.getElementById('phonemeDisplay').textContent = `Quel son ?`;
+        document.getElementById('phonemeDisplay').style.color = '#FFD93D';
+    }
+    
+    updateUI();
+    gameTimeout = setTimeout(nextObstacle, 1500);
+}
+
+function updateUI() {
+    document.getElementById('lives').textContent = lives;
+    document.getElementById('score').textContent = score;
+    document.getElementById('level').textContent = currentLevel;
+}
+
+// --- MASQUER LE PHONÈME DANS LE MOT ---
+function maskPhoneme(word, phoneme) {
+    if (!phoneme || word.length < 2) return word;
+    
+    const lowerWord = word.toLowerCase();
+    const lowerPhoneme = phoneme.toLowerCase();
+    const index = lowerWord.indexOf(lowerPhoneme);
+    
+    if (index === -1) {
+        return word.replace(/[aeiouy]/gi, '_');
+    }
+    
+    const before = word.substring(0, index);
+    const after = word.substring(index + lowerPhoneme.length);
+    const underscores = '_'.repeat(lowerPhoneme.length);
+    
+    return `${before}${underscores}${after}`;
+}
+
+function nextObstacle() {
+    if (!gameRunning || isPaused) return;
+    
+    if (currentObstacle) {
+        currentObstacle.remove();
+        currentObstacle = null;
+    }
+    
+    isAnswering = false;
+    
+    // Choisir un mot
+    currentWord = allWordsPool[Math.floor(Math.random() * allWordsPool.length)];
+    
+    // Déterminer le phonème attendu
+    if (mode === 'fixed') {
+        currentPhoneme = currentPhoneme;
+    } else {
+        // Trouver tous les phonèmes du mot
+        const possiblePhonemes = allPhonemesCheck(currentWord.word);
+        // Prendre le premier trouvé ou un phonème aléatoire
+        currentWord.phoneme = possiblePhonemes[0] || 'ON';
+    }
+    
+    currentObstacle = createObstacle(currentWord);
+    createAnswerButtons();
+    speakWord(currentWord.audioUrl);
+}
+
+function speakWord(audioUrl) {
+    // Arrêter l'audio précédent
+    if (audioElement) {
+        audioElement.pause();
+        audioElement = null;
+    }
+    
+    // Créer un nouvel élément audio
+    audioElement = new Audio(audioUrl);
+    audioElement.lang = 'fr-FR';
+    audioElement.play().catch(e => {
+        console.warn('Audio play failed:', e);
+        // Fallback : synthèse vocale si l'audio échoue
+        const utterance = new SpeechSynthesisUtterance(currentWord.word);
+        utterance.lang = 'fr-FR';
+        speechSynthesis.speak(utterance);
+    });
+}
+
+function createObstacle(wordData) {
+    const obstacle = document.createElement('div');
+    obstacle.className = 'obstacle';
+    obstacle.dataset.word = wordData.word;
+    obstacle.dataset.correctPhoneme = wordData.phoneme;
+    
+    // Masquer le phonème dans le mot
+    const maskedText = mode === 'fixed' 
+        ? maskPhoneme(wordData.word, currentPhoneme)
+        : maskPhoneme(wordData.word, wordData.phoneme);
+    
+    obstacle.innerHTML = `
+        <div class="obstacle-image">${wordData.img}</div>
+        <div class="masked-word">${maskedText}</div>
+    `;
+    
+    document.getElementById('gameArea').appendChild(obstacle);
+    
+    let pos = window.innerWidth;
+    obstacle.style.right = '-200px';
+    
+    const moveInterval = setInterval(() => {
+        if (isPaused) return;
+        
+        pos -= 6;
+        obstacle.style.right = (window.innerWidth - pos) + 'px';
+        
+        if (pos < 100 && !isAnswering) {
+            clearInterval(moveInterval);
+            obstacle.remove();
+            currentObstacle = null;
+            loseLife();
+            
+            // Continuer automatiquement
+            if (lives > 0 && currentLevel < 5) {
+                currentLevel++;
+                updateUI();
+                gameTimeout = setTimeout(nextObstacle, 1500);
+            }
+        }
+    }, 20);
+    
+    obstacle.moveInterval = moveInterval;
+    return obstacle;
+}
+
+function createAnswerButtons() {
+    const container = document.getElementById('answerButtons');
+    container.innerHTML = '';
+    
+    if (mode === 'fixed') {
+        // Mode simple : OUI / NON
+        const btnOui = document.createElement('button');
+        btnOui.className = 'answer-btn correct';
+        btnOui.textContent = '✅ OUI';
+        btnOui.onclick = () => answerFixed(true);
+        
+        const btnNon = document.createElement('button');
+        btnNon.className = 'answer-btn wrong';
+        btnNon.textContent = '❌ NON';
+        btnNon.onclick = () => answerFixed(false);
+        
+        container.appendChild(btnOui);
+        container.appendChild(btnNon);
+    } else {
+        // Mode random : choisir entre plusieurs phonèmes
+        const allPhonemes = ['ON', 'AN', 'OI', 'CH'];
+        
+        // Créer un bouton pour le phonème correct
+        const correctBtn = document.createElement('button');
+        correctBtn.className = 'answer-btn';
+        correctBtn.textContent = currentWord.phoneme;
+        correctBtn.style.background = phonemesData[currentWord.phoneme].color;
+        correctBtn.onclick = () => answerRandom(currentWord.phoneme);
+        container.appendChild(correctBtn);
+        
+        // Créer des boutons pour des phonèmes incorrects
+        const incorrectPhonemes = allPhonemes.filter(p => p !== currentWord.phoneme);
+        for (let i = 0; i < Math.min(2, incorrectPhonemes.length); i++) {
+            const wrongBtn = document.createElement('button');
+            wrongBtn.className = 'answer-btn wrong';
+            wrongBtn.textContent = incorrectPhonemes[i];
+            wrongBtn.onclick = () => answerRandom(incorrectPhonemes[i]);
+            container.appendChild(wrongBtn);
+        }
+    }
+}
+
+function answerFixed(userChoice) {
+    if (!currentObstacle || isAnswering) return;
+    isAnswering = true;
+    clearInterval(currentObstacle.moveInterval);
+    
+    const correct = currentObstacle.dataset.correctPhoneme === currentPhoneme;
+    const userCorrect = (userChoice && correct) || (!userChoice && !correct);
+    
+    if (userCorrect) {
+        score += 25;
+        playSuccess();
+        showFeedback('✨ SUPER !', '#4CAF50');
+        document.getElementById('character').style.bottom = '250px';
+        setTimeout(() => { document.getElementById('character').style.bottom = '120px'; }, 400);
+    } else {
+        playFail();
+        loseLife();
+    }
+    
+    updateUI();
+    setTimeout(() => proceedToNext(), 1500);
+}
+
+function answerRandom(userPhoneme) {
+    if (!currentObstacle || isAnswering) return;
+    isAnswering = true;
+    clearInterval(currentObstacle.moveInterval);
+    
+    const correct = userPhoneme === currentObstacle.dataset.correctPhoneme;
+    
+    if (correct) {
+        score += 30; // Plus de points en mode difficile
+        playSuccess();
+        showFeedback('✨ SUPER !', '#4CAF50');
+        document.getElementById('character').style.bottom = '250px';
+        setTimeout(() => { document.getElementById('character').style.bottom = '120px'; }, 400);
+    } else {
+        playFail();
+        loseLife();
+    }
+    
+    updateUI();
+    setTimeout(() => proceedToNext(), 1500);
+}
+
+function proceedToNext() {
+    if (currentObstacle) {
+        currentObstacle.remove();
+        currentObstacle = null;
+    }
+    
+    if (lives <= 0) {
+        endGame(false);
+    } else if (currentLevel >= 5) {
+        endGame(true);
+    } else {
+        currentLevel++;
+        updateUI();
+        gameTimeout = setTimeout(nextObstacle, 1500);
+    }
+}
+
+function loseLife() {
+    lives--;
+    playFail();
+    showFeedback('❌ Mauvais !', '#F44336');
+    document.getElementById('character').style.opacity = '0.3';
+    setTimeout(() => { document.getElementById('character').style.opacity = '1'; }, 500);
+}
+
+function showFeedback(text, color) {
+    const feedback = document.getElementById('feedback');
+    if (feedback) feedback.remove();
+    
+    const newFeedback = document.createElement('div');
+    newFeedback.id = 'feedback';
+    newFeedback.textContent = text;
+    newFeedback.style.color = color;
+    document.getElementById('gameScreen').appendChild(newFeedback);
+    
+    setTimeout(() => newFeedback.remove(), 800);
+}
+
+function endGame(won) {
+    gameRunning = false;
+    if (audioElement) audioElement.pause();
+    speechSynthesis.cancel();
+    if (gameTimeout) clearTimeout(gameTimeout);
+    
+    hideAllScreens();
+    document.getElementById('endScreen').classList.remove('hidden');
+    
+    const stars = Math.floor(score / 50);
+    document.getElementById('endStars').textContent = '⭐'.repeat(Math.min(stars, 5));
+    
+    if (won) {
+        document.getElementById('endTitle').textContent = '🎉 VICTOIRE !';
+        document.getElementById('endMessage').textContent = mode === 'random' 
+            ? 'Tu maîtrises tous les sons !' 
+            : `Tu as maîtrisé "${currentPhoneme}" !`;
+    } else {
+        document.getElementById('endTitle').textContent = '💔 Perdu...';
+        document.getElementById('endMessage').textContent = `Score: ${score}. Réessaie !`;
+    }
+}
+
+function pauseGame() {
+    if (!gameRunning || !currentObstacle) return;
+    
+    isPaused = !isPaused;
+    document.getElementById('pauseBtn').textContent = isPaused ? '▶️ Reprendre' : '⏸️ Pause';
+    
+    if (isPaused) {
+        if (audioElement) audioElement.pause();
+        speechSynthesis.pause();
+        clearInterval(currentObstacle.moveInterval);
+        if (gameTimeout) clearTimeout(gameTimeout);
+    } else {
+        if (audioElement) audioElement.play();
+        speechSynthesis.resume();
+        // Reprendre le mouvement
+        const pos = window.innerWidth - parseInt(currentObstacle.style.right || 0);
+        const moveInterval = setInterval(() => {
+            if (isPaused) return;
+            pos -= 6;
+            currentObstacle.style.right = (window.innerWidth - pos) + 'px';
+            if (pos < 100 && !isAnswering) {
+                clearInterval(moveInterval);
+                currentObstacle.remove();
+                currentObstacle = null;
+                loseLife();
+                if (lives > 0 && currentLevel < 5) {
+                    currentLevel++;
+                    updateUI();
+                    gameTimeout = setTimeout(nextObstacle, 1500);
+                }
+            }
+        }, 20);
+        currentObstacle.moveInterval = moveInterval;
+    }
+}
+
+// --- INITIALISATION ---
+showMenu();
+</script>
+</body>
+</html>
