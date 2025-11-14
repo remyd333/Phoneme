@@ -7,7 +7,7 @@
 <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
-        font-family: 'Comic Sans MS', cursive, sans-serif;
+        font-family: -apple-system, system-ui, "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         overflow: hidden; user-select: none;
     }
@@ -21,21 +21,47 @@
         justify-content: center; color: white; text-align: center;
         padding: 20px;
     }
-    h1 { font-size: 4em; margin-bottom: 30px; text-shadow: 3px 3px 6px rgba(0,0,0,0.5); }
-    h2 { font-size: 3em; margin-bottom: 20px; text-shadow: 2px 2px 4px rgba(0,0,0,0.5); }
-    button {
-        font-size: 2em; padding: 20px 50px; margin: 15px;
-        background: #FFD93D; color: #333; border: none;
-        border-radius: 50px; cursor: pointer; transition: transform 0.2s;
-        font-weight: bold;
+    h1 { 
+        font-size: clamp(2.5em, 8vw, 4em); 
+        margin-bottom: 30px; 
+        text-shadow: 3px 3px 6px rgba(0,0,0,0.5);
+        font-weight: 800;
     }
-    button:hover { transform: scale(1.1); box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+    h2 { 
+        font-size: clamp(2em, 6vw, 3em); 
+        margin-bottom: 20px; 
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        font-weight: 700;
+    }
+    button {
+        font-size: clamp(1.5em, 5vw, 2em);
+        padding: clamp(15px, 4vw, 20px) clamp(30px, 8vw, 50px);
+        margin: 15px;
+        background: #FFD93D; 
+        color: #333; 
+        border: none;
+        border-radius: 50px; 
+        cursor: pointer; 
+        transition: transform 0.2s;
+        font-weight: bold;
+        -webkit-tap-highlight-color: transparent;
+        min-height: 60px;
+    }
+    button:hover { transform: scale(1.05); box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+    @media (hover: none) {
+        button:hover { transform: none; }
+    }
     .level-grid {
-        display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-        gap: 30px; max-width: 900px; padding: 20px;
+        display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 20px; max-width: 900px; padding: 20px;
+        width: 100%;
     }
     .level-btn {
-        background: #4CAF50; color: white; padding: 40px; font-size: 2.5em;
+        background: #4CAF50; 
+        color: white; 
+        padding: 30px 20px; 
+        font-size: clamp(1.8em, 5vw, 2.5em);
+        min-height: 100px;
     }
     #gameArea {
         width: 100%; height: 70%; position: relative; overflow: hidden;
@@ -65,69 +91,118 @@
         box-shadow: 0 4px 8px rgba(0,0,0,0.3);
     }
     .masked-word {
-        margin-top: 10px; font-size: 2.5em; font-weight: bold; color: white;
+        margin-top: 10px; 
+        font-size: clamp(2em, 5vw, 2.5em); 
+        font-weight: bold; 
+        color: white;
         font-family: 'Courier New', monospace;
         text-shadow: 2px 2px 4px rgba(0,0,0,0.7);
+        background: rgba(0,0,0,0.2);
+        padding: 5px 15px;
+        border-radius: 10px;
     }
-    /* UI MODIFIÉE */
     #ui {
         position: absolute; 
         top: 20px; 
         left: 20px; 
         right: 280px;
         display: flex; 
-        justify-content: flex-start; /* Aligner à gauche */
+        justify-content: flex-start;
         color: white;
-        font-size: 1.8em; 
+        font-size: clamp(1.4em, 4vw, 1.8em); 
         font-weight: bold;
-        gap: 30px; /* Espace entre les éléments */
+        gap: 20px;
+        flex-wrap: wrap;
     }
-    /* NOUVEAU COMPTEUR DE NIVEAU en dessous */
     #levelCounter {
         position: absolute;
-        top: 70px; /* En dessous des vies */
+        top: 70px;
         left: 20px;
         color: white;
-        font-size: 1.8em;
+        font-size: clamp(1.4em, 4vw, 1.8em);
         font-weight: bold;
+        background: rgba(0,0,0,0.3);
+        padding: 5px 15px;
+        border-radius: 20px;
     }
     #phonemeDisplay {
         position: absolute; top: 30px; left: 50%; transform: translateX(-50%);
-        font-size: 5em; color: #FFD93D; text-shadow: 4px 4px 8px rgba(0,0,0,0.7);
+        font-size: clamp(3em, 8vw, 5em); 
+        color: #FFD93D; 
+        text-shadow: 4px 4px 8px rgba(0,0,0,0.7);
+        font-weight: 800;
+        text-align: center;
+        padding: 0 20px;
     }
     #instruction {
         display: none;
     }
     #controlArea {
-        position: absolute; bottom: 0; width: 100%; height: 30%;
+        position: absolute; 
+        bottom: 0;
+        left: 0; 
+        right: 0;
+        height: 120px;
         background: transparent;
-        display: flex; flex-direction: column;
-        align-items: center; justify-content: space-around;
+        display: flex; 
+        flex-direction: column;
+        align-items: center; 
+        justify-content: center;
     }
-    #answerButtons { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; }
-    .answer-btn { padding: 20px 40px; font-size: 2em; min-width: 120px; }
+    #answerButtons { 
+        display: flex; 
+        gap: 15px; 
+        flex-wrap: wrap; 
+        justify-content: center;
+        margin-bottom: 10px;
+        padding: 0 20px;
+    }
+    .answer-btn { 
+        padding: clamp(12px, 3vw, 15px) clamp(25px, 6vw, 35px); 
+        font-size: clamp(1.4em, 4vw, 1.8em); 
+        min-width: 100px;
+    }
     .answer-btn.correct { background: #4CAF50; }
     .answer-btn.wrong { background: #F44336; }
     .answer-btn.none { background: #666; }
-    #pauseBtn, #menuBtn, #musicBtn {
-        position: absolute; top: 20px; padding: 15px 30px;
-        font-size: 1.5em; z-index: 100; width: 170px;
+    #pauseBtn, #menuBtn, #musicBtn, #soundsBtn {
+        position: absolute; 
+        top: 20px; 
+        padding: 10px 20px;
+        font-size: clamp(1.2em, 3.5vw, 1.5em); 
+        z-index: 100; 
+        width: auto;
+        min-width: 140px;
         text-align: center;
+        border-radius: 30px;
     }
     #pauseBtn { right: 20px; }
-    #menuBtn { right: 210px; background: #2196F3; }
-    #musicBtn { right: 400px; background: #9C27B0; }
+    #menuBtn { right: 180px; background: #2196F3; }
+    #musicBtn { right: 340px; background: #9C27B0; }
+    #soundsBtn { right: 500px; background: #FF9800; }
     #feedback {
         position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-        font-size: 5em; color: #FFD93D; font-weight: bold; text-shadow: 4px 4px 8px rgba(0,0,0,0.7);
-        animation: bounce 0.5s; z-index: 20;
+        font-size: clamp(3em, 8vw, 5em);
+        color: #FFD93D; 
+        font-weight: bold; 
+        text-shadow: 4px 4px 8px rgba(0,0,0,0.7);
+        animation: bounce 0.5s; 
+        z-index: 20;
+        pointer-events: none;
     }
     @keyframes bounce {
         0%, 100% { transform: translate(-50%, -50%) scale(1); }
-        50% { transform: translate(-50%, -50%) scale(1.3); }
+        50% { transform: translate(-50%, -50%) scale(1.2); }
     }
-    .stars { font-size: 3em; margin: 20px; }
+    .stars { font-size: clamp(2em, 6vw, 3em); margin: 20px; }
     .hidden { display: none !important; }
+    
+    /* Améliorations iPad */
+    @media (max-width: 1024px) {
+        #character { left: 40px; }
+        .obstacle { width: 160px; height: 180px; }
+        .obstacle-image { width: 100px; height: 100px; font-size: 4em; }
+    }
 </style>
 </head>
 <body>
@@ -135,10 +210,10 @@
     <!-- Écran Menu -->
     <div id="menuScreen">
         <h1>🔍 Trouver les Sons 🎮</h1>
-        <p style="font-size: 1.8em; margin-bottom: 40px;">Écoute bien et aide l'explorateur !</p>
+        <p style="font-size: clamp(1.4em, 4vw, 1.8em); margin-bottom: 40px;">Écoute bien et aide l'explorateur !</p>
         <button onclick="showLevels()">Jouer</button>
+        <button id="musicBtnMenu" onclick="toggleMusic()" style="background:#9C27B0;">🔊 Musique</button>
     </div>
-
     <!-- Écran Sélection Mode -->
     <div id="levelScreen" class="hidden">
         <h2>Choisis un mode :</h2>
@@ -147,14 +222,12 @@
         <button onclick="startGame(null, 'expert')" style="background:#F44336;">🔥 Niveau 3 (expert)</button>
         <button onclick="showMenu()" style="background:#999; margin-top: 30px;">← Retour au menu</button>
     </div>
-
     <!-- Écran Sélection Phonème (Niveau 1) -->
     <div id="phonemeSelectScreen" class="hidden">
         <h2>Choisis le son à apprendre :</h2>
         <div class="level-grid" id="phonemeGrid"></div>
         <button onclick="showLevels()" style="background:#999; margin-top: 30px;">← Retour</button>
     </div>
-
     <!-- Écran Jeu -->
     <div id="gameScreen" class="hidden">
         <div id="gameArea">
@@ -163,42 +236,47 @@
             <div id="phonemeDisplay"></div>
             <div id="instruction"></div>
         </div>
-        <div id="controlArea">
-            <div id="answerButtons"></div>
-        </div>
         
-        <!-- UI MODIFIÉE : Vies et Score seulement -->
+        <!-- UI : Vies et Score -->
         <div id="ui">
             <div>Vies: <span id="lives">3</span> ❤️</div>
             <div>Score: <span id="score">0</span> ⭐</div>
         </div>
         
-        <!-- NOUVEAU COMPTEUR DE NIVEAU -->
+        <!-- COMPTEUR DE NIVEAU -->
         <div id="levelCounter">Niveau: <span id="level">1</span>/5</div>
         
+        <!-- Boutons de contrôle -->
         <button id="pauseBtn" onclick="pauseGame()">⏸️ Pause</button>
         <button id="menuBtn" onclick="goToMenu()">🏠 Menu</button>
         <button id="musicBtn" onclick="toggleMusic()">🔊 Musique</button>
+        <button id="soundsBtn" onclick="toggleWordSounds()">🔊 Sons</button>
+        
+        <!-- Boutons de réponse DANS LE GROUND -->
+        <div id="controlArea">
+            <div id="answerButtons"></div>
+        </div>
     </div>
-
     <!-- Écran Fin -->
     <div id="endScreen" class="hidden">
         <h2 id="endTitle">Bravo !</h2>
         <div class="stars" id="endStars"></div>
-        <p id="endMessage" style="font-size: 2em; margin: 30px;"></p>
+        <p id="endMessage" style="font-size: clamp(1.4em, 4vw, 2em); margin: 30px;"></p>
         <button onclick="showLevels()">Choisir un mode</button>
         <button onclick="showMenu()">Menu principal</button>
     </div>
 </div>
-
 <script>
-// --- DONNÉES DES NIVEAUX ---
+// URL de base pour les fichiers audio - NOUVEAU REPO
+const AUDIO_BASE_URL = 'https://remyd333.github.io/Phoneme/audio/';
+
+// --- DONNÉES DES NIVEAUX (simplifié, utilise directement le champ audio) ---
 const phonemesData = {
     'ON': {
         icon: '🔔', color: '#FF6B6B', words: [
             { img: '🚚', word: 'camion', audio: 'camion.mp3' },
             { img: '✏️', word: 'crayon', audio: 'crayon.mp3' },
-            { img: '🌊', word: 'ocean', audio: 'ocean.mp3' },
+            { img: '🌊', word: 'océan', audio: 'océan.mp3' },
             { img: '🦁', word: 'lion', audio: 'lion.mp3' },
             { img: '🏠', word: 'maison', audio: 'maison.mp3' },
             { img: '🐶', word: 'chien', audio: 'chien.mp3' },
@@ -209,7 +287,7 @@ const phonemesData = {
     'AN': {
         icon: '🎪', color: '#4ECDC4', words: [
             { img: '🏖️', word: 'sable', audio: 'sable.mp3' },
-            { img: '🐘', word: 'elephant', audio: 'elephant.mp3' },
+            { img: '🐘', word: 'éléphant', audio: 'éléphant.mp3' },
             { img: '🐞', word: 'coccinelle', audio: 'coccinelle.mp3' },
             { img: '📦', word: 'carton', audio: 'carton.mp3' },
             { img: '🎵', word: 'chanson', audio: 'chanson.mp3' },
@@ -222,7 +300,7 @@ const phonemesData = {
         icon: '🎯', color: '#95E1D3', words: [
             { img: '🐸', word: 'grenouille', audio: 'grenouille.mp3' },
             { img: '👑', word: 'roi', audio: 'roi.mp3' },
-            { img: '🌟', word: 'etoile', audio: 'etoile.mp3' },
+            { img: '🌟', word: 'étoile', audio: 'étoile.mp3' },
             { img: '🚗', word: 'voiture', audio: 'voiture.mp3' },
             { img: '🦃', word: 'dinde', audio: 'dinde.mp3' },
             { img: '🍌', word: 'banane', audio: 'banane.mp3' },
@@ -244,9 +322,6 @@ const phonemesData = {
     }
 };
 
-// URL de base pour les fichiers audio
-const AUDIO_BASE_URL = 'https://atfbmx.github.io/Phoneme/audio/';
-
 // --- ÉTAT DU JEU ---
 let currentPhoneme = '';
 let currentWord = null;
@@ -265,44 +340,54 @@ let previousWord = null;
 let obstacleSpeed = 6;
 let musicElement = null;
 let musicPlaying = false;
+let wordSoundsEnabled = true;
 
 // --- MUSIQUE DE FOND ---
 function toggleMusic() {
     if (!musicElement) {
         musicElement = new Audio(`${AUDIO_BASE_URL}son.mp3`);
         musicElement.loop = true;
-        musicElement.volume = 0.2; // Volume plus bas pour la musique de fond
+        musicElement.volume = 0.15;
     }
     
     if (musicPlaying) {
         musicElement.pause();
         document.getElementById('musicBtn').textContent = '🔇 Musique';
+        if (document.getElementById('musicBtnMenu')) document.getElementById('musicBtnMenu').textContent = '🔇 Musique';
         musicPlaying = false;
     } else {
         musicElement.play().catch(e => console.warn('Music play failed:', e));
         document.getElementById('musicBtn').textContent = '🔊 Musique';
+        if (document.getElementById('musicBtnMenu')) document.getElementById('musicBtnMenu').textContent = '🔊 Musique';
         musicPlaying = true;
-        updateMusicSpeed(); // Appliquer la vitesse actuelle
+        updateMusicSpeed();
     }
+}
+
+// --- SONS DES MOTS (ON/OFF) ---
+function toggleWordSounds() {
+    wordSoundsEnabled = !wordSoundsEnabled;
+    document.getElementById('soundsBtn').textContent = wordSoundsEnabled ? '🔊 Sons' : '🔇 Sons';
 }
 
 function updateMusicSpeed() {
     if (musicElement && musicPlaying) {
-        // VITESSE SELON LE LEVEL UNIQUEMENT (1, 2 ou 3)
         let speed = 1.0;
-        if (mode === 'random') speed = 1.25; // Level 2 : +25%
-        if (mode === 'expert') speed = 1.50; // Level 3 : +50%
-        
+        if (mode === 'fixed') speed = 0.8;
+        if (mode === 'expert') speed = 1.2;
         musicElement.playbackRate = speed;
-        console.log('Music speed for level', mode, ':', speed);
     }
 }
 
 // --- GESTION AUDIO ROBUSTE ---
 function playAudio(url) {
-    if (!url) return;
+    if (!url) {
+        console.error('playAudio: URL is null');
+        return;
+    }
     
-    // Arrêter l'audio précédent
+    console.log('PLAYING AUDIO:', url);
+    
     if (audioElement) {
         try { audioElement.pause(); audioElement = null; } catch (e) {}
     }
@@ -310,9 +395,15 @@ function playAudio(url) {
     try {
         audioElement = new Audio();
         audioElement.src = url;
-        audioElement.volume = 0.7;
-        audioElement.onerror = () => playSystemSound(true);
-        audioElement.play().catch(() => playSystemSound(true));
+        audioElement.volume = 1.0;
+        audioElement.onerror = (e) => {
+            console.error('Audio loading error:', e);
+            playSystemSound(true);
+        };
+        audioElement.play().catch((e) => {
+            console.warn('Audio play failed:', e);
+            playSystemSound(true);
+        });
     } catch (e) {
         playSystemSound(true);
     }
@@ -338,12 +429,10 @@ function showMenu() {
     hideAllScreens();
     document.getElementById('menuScreen').classList.remove('hidden');
 }
-
 function showLevels() {
     hideAllScreens();
     document.getElementById('levelScreen').classList.remove('hidden');
 }
-
 function showPhonemeSelection() {
     hideAllScreens();
     const grid = document.getElementById('phonemeGrid');
@@ -358,16 +447,14 @@ function showPhonemeSelection() {
     }
     document.getElementById('phonemeSelectScreen').classList.remove('hidden');
 }
-
 function hideAllScreens() {
     document.querySelectorAll('#menuScreen, #levelScreen, #gameScreen, #endScreen, #phonemeSelectScreen')
         .forEach(screen => screen.classList.add('hidden'));
 }
-
 function goToMenu() {
     gameRunning = false;
     if (audioElement) { try { audioElement.pause(); } catch {} audioElement = null; }
-    if (musicElement && musicPlaying) { musicElement.pause(); }
+    if (musicElement && musicPlaying) { musicElement.pause(); musicPlaying = false; }
     if (gameTimeout) clearTimeout(gameTimeout);
     if (currentObstacle && currentObstacle.moveInterval) {
         clearInterval(currentObstacle.moveInterval);
@@ -408,21 +495,19 @@ function startGame(phoneme, gameMode) {
     document.getElementById('character').style.setProperty('--character-face', '"😐"');
     updateUI();
     
-    // DÉMARRER LA MUSIQUE AUTOMATIQUEMENT
     if (!musicPlaying && musicElement) {
-        toggleMusic(); // Active la musique au début
+        toggleMusic();
+    } else if (musicPlaying) {
+        updateMusicSpeed();
     }
-    updateMusicSpeed(); // Appliquer la bonne vitesse
     
     gameTimeout = setTimeout(nextObstacle, 1500);
 }
-
 function updateUI() {
     document.getElementById('lives').textContent = lives;
     document.getElementById('score').textContent = score;
     document.getElementById('level').textContent = currentLevel;
 }
-
 function getPhonemesInWord(word) {
     const phonemes = []; const lower = word.toLowerCase();
     if (lower.includes('on')) phonemes.push('ON');
@@ -431,7 +516,6 @@ function getPhonemesInWord(word) {
     if (lower.includes('ch')) phonemes.push('CH');
     return phonemes;
 }
-
 function maskPhoneme(word, phonemeToMask) {
     if (!phonemeToMask || word.length < 2) return word;
     if (mode !== 'fixed') {
@@ -449,13 +533,12 @@ function maskPhoneme(word, phonemeToMask) {
     const underscores = '_'.repeat(lowerPhoneme.length);
     return `${before}${underscores}${after}`;
 }
-
 function nextObstacle() {
     if (!gameRunning || isPaused) return;
     
     if (currentObstacle && currentObstacle.moveInterval) {
         clearInterval(currentObstacle.moveInterval);
-        try { currentObstacle.remove(); } catch {}
+        try { currentObstacle.remove(); } catch{}
         currentObstacle = null;
     }
     
@@ -476,10 +559,14 @@ function nextObstacle() {
     
     currentObstacle = createObstacle(currentWord, phonemesInWord);
     createAnswerButtons(phonemesInWord);
-    const audioUrl = getAudioUrl(currentWord.word);
-    if (audioUrl) playAudio(audioUrl); else playSystemSound(true);
+    
+    // JOUER LE SON DU MOT (si activé) - UTILISE DIRECTEMENT currentWord.audio
+    if (wordSoundsEnabled && currentWord.audio) {
+        const audioUrl = `${AUDIO_BASE_URL}${currentWord.audio}`;
+        console.log('Playing word sound:', audioUrl);
+        playAudio(audioUrl);
+    }
 }
-
 function createObstacle(wordData, phonemesInWord) {
     const obstacle = document.createElement('div');
     obstacle.className = 'obstacle';
@@ -520,7 +607,6 @@ function createObstacle(wordData, phonemesInWord) {
     obstacle.moveInterval = moveInterval;
     return obstacle;
 }
-
 function createAnswerButtons(phonemesInWord) {
     const container = document.getElementById('answerButtons');
     container.innerHTML = '';
@@ -561,7 +647,6 @@ function createAnswerButtons(phonemesInWord) {
         });
     }
 }
-
 function answer(isCorrect, selectedPhoneme) {
     if (!currentObstacle || isAnswering) return;
     isAnswering = true;
@@ -575,7 +660,7 @@ function answer(isCorrect, selectedPhoneme) {
     if (correct) {
         score += mode === 'fixed' ? 25 : 30;
         document.getElementById('character').style.setProperty('--character-face', '"😊"');
-        playAudio('https://atfbmx.github.io/Phoneme/audio/success.mp3');
+        playAudio('https://remyd333.github.io/Phoneme/audio/success.mp3');
         showFeedback('✨ SUPER !', '#4CAF50');
         document.getElementById('character').style.bottom = '250px';
         setTimeout(() => { 
@@ -584,17 +669,16 @@ function answer(isCorrect, selectedPhoneme) {
         }, 400);
     } else {
         document.getElementById('character').style.setProperty('--character-face', '"😢"');
-        playAudio('https://atfbmx.github.io/Phoneme/audio/fail.mp3');
+        playAudio('https://remyd333.github.io/Phoneme/audio/fail.mp3');
         loseLife();
     }
     
     updateUI();
     setTimeout(() => proceedToNext(), 1800);
 }
-
 function proceedToNext() {
     if (currentObstacle) {
-        try { currentObstacle.remove(); } catch {}
+        try { currentObstacle.remove(); } catch{}
         currentObstacle = null;
     }
     
@@ -616,7 +700,6 @@ function proceedToNext() {
         gameTimeout = setTimeout(nextObstacle, 1500);
     }
 }
-
 function loseLife() {
     lives--;
     showFeedback('❌ Mauvais !', '#F44336');
@@ -626,7 +709,6 @@ function loseLife() {
         setTimeout(() => document.getElementById('character').style.setProperty('--character-face', '"😐"'), 300);
     }, 500);
 }
-
 function showFeedback(text, color) {
     const feedback = document.getElementById('feedback');
     if (feedback) feedback.remove();
@@ -637,10 +719,10 @@ function showFeedback(text, color) {
     document.getElementById('gameScreen').appendChild(newFeedback);
     setTimeout(() => newFeedback.remove(), 800);
 }
-
 function endGame(won) {
     gameRunning = false;
     if (audioElement) { try { audioElement.pause(); } catch {} audioElement = null; }
+    if (musicElement && musicPlaying) { musicElement.pause(); musicPlaying = false; }
     if (gameTimeout) clearTimeout(gameTimeout);
     
     hideAllScreens();
@@ -657,7 +739,6 @@ function endGame(won) {
         document.getElementById('endMessage').textContent = `Score: ${score}. Réessaie !`;
     }
 }
-
 function pauseGame() {
     if (!gameRunning || !currentObstacle) return;
     
